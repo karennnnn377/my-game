@@ -12,7 +12,7 @@ export type CatId =
   | "writers" | "entrepreneurs" | "tech" | "gaming" | "tv" | "comedians"
   | "internet" | "iran" | "world";
 
-type Row = [string, number, number, number, number];
+export type Row = [string, number, number, number, number];
 
 const RAW: Record<CatId, Row[]> = {
   football: [
@@ -397,6 +397,13 @@ export interface Person {
 export const PEOPLE: Person[] = [];
 export const BY_CAT: Record<string, Person[]> = {};
 export const BY_DATE: Map<string, Person[]> = new Map();
+
+/* merge append-only expansion packs into the master table */
+import { EXTRA } from "./more";
+(Object.keys(EXTRA) as CatId[]).forEach((c) => {
+  const rows = EXTRA[c];
+  if (rows) RAW[c].push(...rows);
+});
 
 (Object.keys(RAW) as CatId[]).forEach((cat) => {
   BY_CAT[cat] = [];

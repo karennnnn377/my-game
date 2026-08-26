@@ -64,6 +64,7 @@ export default function Profile() {
     { l: t("accuracy"), v: `${acc}%`, c: "#ff6b7e" },
     { l: t("p_hiscore"), v: String(profile.bestScore), c: "#ffd97a" },
     { l: t("best_streak"), v: `×${profile.bestStreak}`, c: "#c084fc" },
+    { l: t("p_run"), v: `×${profile.bestRun}`, c: "#ff8a5c" },
   ];
 
   return (

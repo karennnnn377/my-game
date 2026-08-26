@@ -61,6 +61,8 @@ export default function Game({ mode }: { mode: Mode }) {
     sfx.complete();
     const m = st.current.marks;
     const cc = m.filter(Boolean).length;
+    let tail = 0;
+    for (let i = m.length - 1; i >= 0 && m[i]; i--) tail++;
     if (!recorded.current) {
       recorded.current = true;
       const perCat: Record<string, number> = {};
@@ -69,7 +71,7 @@ export default function Game({ mode }: { mode: Mode }) {
       });
       const finalScoreVal = st.current.score;
       const xp = Math.round(finalScoreVal / 12);
-      const res = recordGame({ score: finalScoreVal, correct: cc, total: questions.length, bestStreak: st.current.best, perCat, mode, xp });
+      const res = recordGame({ score: finalScoreVal, correct: cc, total: questions.length, bestStreak: st.current.best, tail, perCat, mode, xp });
       setSummary({ ...res, xp });
     }
     if (cc >= 8) setTimeout(() => fxBus.emit({ type: "confetti", power: "big" }), 350);

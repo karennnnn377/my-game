@@ -116,6 +116,7 @@ const L: Record<string, Entry> = {
   p_questions: ["Questions Answered", "سؤالات پاسخ‌داده", "أسئلة مُجابة"],
   p_correct: ["Correct Answers", "پاسخ‌های درست", "إجابات صحيحة"],
   p_hiscore: ["Highest Score", "بیشترین امتیاز", "أعلى نتيجة"],
+  p_run: ["Mega Streak", "ابررکورد پیاپی", "السلسلة الكبرى"],
   p_fav: ["Favorite Arena", "زمین محبوب", "الساحة المفضلة"],
   p_xp: ["Total XP", "مجموع تجربه", "مجموع الخبرة"],
   p_ach: ["Achievements", "دستاوردها", "الإنجازات"],

@@ -21,6 +21,8 @@ export interface Profile {
   correct: number;
   bestScore: number;
   bestStreak: number;
+  run: number; // mega streak: consecutive correct answers across games
+  bestRun: number;
   bday: { gy: number; gm: number; gd: number } | null;
   cats: Partial<Record<CatId, number>>;
   ach: string[];
@@ -31,6 +33,7 @@ export interface GameResult {
   correct: number;
   total: number;
   bestStreak: number;
+  tail: number; // trailing consecutive correct answers at game end
   perCat: Partial<Record<CatId, number>>;
   mode: Mode;
   xp: number;
@@ -53,6 +56,8 @@ const DEFAULT_PROFILE: Profile = {
   correct: 0,
   bestScore: 0,
   bestStreak: 0,
+  run: 0,
+  bestRun: 0,
   bday: null,
   cats: {},
   ach: [],
@@ -223,9 +228,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         correct: profile.correct + r.correct,
         bestScore: Math.max(profile.bestScore, r.score),
         bestStreak: Math.max(profile.bestStreak, r.bestStreak),
+        run: 0,
+        bestRun: profile.bestRun,
         cats: { ...profile.cats },
         ach: [...profile.ach],
       };
+      /* mega streak: a flawless game extends the cross-game run;
+         a broken game restarts it from the trailing correct tail */
+      next.run = r.correct === r.total ? profile.run + r.total : r.tail;
+      next.bestRun = Math.max(profile.bestRun, next.run);
       (Object.keys(r.perCat) as CatId[]).forEach((c) => {
         next.cats[c] = (next.cats[c] ?? 0) + (r.perCat[c] ?? 0);
       });
@@ -242,7 +253,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       };
       if (r.correct >= 8) grant("first_win");
       if (r.bestStreak >= 10) grant("streak10");
-      if (next.bestStreak >= 25) grant("streak25");
+      if (next.bestRun >= 25) grant("streak25");
       if (r.total > 0 && r.correct / r.total >= 0.9) grant("acc90");
       if ((next.cats.football ?? 0) >= 15) grant("football_expert");
       if (((next.cats.actors ?? 0) + (next.cats.actresses ?? 0)) >= 15) grant("movie_expert");
@@ -259,11 +270,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         ...rs,
       ]);
 
+      if (newLevel > prevLevel) {
+        setTimeout(() => {
+          sfx.levelUp();
+          pushToast("⬆️", `${tr(lang, "level_up")} ${tr(lang, "th_level")} ${newLevel}`);
+        }, 650);
+      }
+
       earned.forEach((id, i) => {
         setTimeout(() => {
           sfx.achievement();
           pushToast(ACH[id].icon, `${tr(lang, "ach_unlocked")}: ${ACH[id].n[lang === "en" ? 0 : lang === "fa" ? 1 : 2]}`);
-        }, 900 + i * 1400);
+        }, 1400 + i * 1400);
       });
 
       return { newAch: earned, levelUp: newLevel > prevLevel ? newLevel : null };
