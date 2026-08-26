@@ -75,6 +75,9 @@ export const IcGear = (p: IcProps) => (
 );
 export const IcEdit = (p: IcProps) => <S {...p}><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17Z" /><path d="m14 7 3 3" /></S>;
 
+export const IcCal = (p: IcProps) => <S {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18" /><path d="M8 3v4" /><path d="M16 3v4" /></S>;
+export const IcTimer = (p: IcProps) => <S {...p}><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.6 2.6" /><path d="M9 2.5h6" /></S>;
+
 /* ---------- difficulty ---------- */
 
 export const DIFF_STYLE = [

@@ -9,6 +9,7 @@
 import { tr, fmt, MONTHS, PROF, type Lang } from "../i18n";
 import { pname, eraOf, ERA_KEYS, bornOn, BY_CAT, type Person } from "../data/people";
 import { countryName } from "../data/nations";
+import { curatedBio, curatedFact } from "../data/meta";
 
 const idx = { en: 0, fa: 1, ar: 2 } as const;
 
@@ -25,8 +26,12 @@ export function professionOf(p: Person, lang: Lang): string {
   return prof ? prof[idx[lang]] : p.cat;
 }
 
-/** one-line localized biography */
+/** one-line localized biography (curated English copy wins when available) */
 export function bioOf(p: Person, lang: Lang): string {
+  if (lang === "en") {
+    const cb = curatedBio(p);
+    if (cb) return cb;
+  }
   const vars: Record<string, string | number> = {
     name: pname(p, lang),
     prof: professionOf(p, lang),
@@ -42,6 +47,10 @@ export function bioOf(p: Person, lang: Lang): string {
 /** 2–4 localized "fast facts" derived from the data itself */
 export function factsOf(p: Person, lang: Lang): string[] {
   const out: string[] = [];
+  if (lang === "en") {
+    const cf = curatedFact(p);
+    if (cf) out.push(cf);
+  }
   const month = MONTHS[lang][p.m - 1];
   const vars = { day: p.d, month, year: yearStr(p, lang), era: eraLabel(p, lang) };
 

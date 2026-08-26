@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "../components/Avatar";
+import { PersonModal } from "../components/PersonCard";
 import { DiffBadge, DIFF_STYLE, IcBack, IcBolt, IcCheck, IcFlame, IcStar, IcTarget, IcTrophy, IcX, LogoMark } from "../components/ui";
 import { MONTHS, ACH } from "../i18n";
 import { CAT_MAP } from "../data/cats";
-import { pname, type Person } from "../data/people";
+import type { Person } from "../data/people";
+import { factsOf } from "../lib/bio";
 import {
   DIFF_POINTS, QUESTIONS_PER_GAME, dailySeed, generateGame, levelFromXp,
   loadRecent, pushRecent, streakBonus, type Mode, type Question,
 } from "../lib/engine";
-import { revealFact } from "../lib/bio";
 import { sfx } from "../lib/audio";
 import { fxBus, useStore } from "../store";
+
+const QTIME = 20; // seconds per question
 
 function useCountUp(target: number, dur = 1300) {
   const [v, setV] = useState(0);
@@ -32,7 +35,7 @@ export default function Game({ mode }: { mode: Mode }) {
   const { t, cat, go, lang, profile, recordGame } = useStore();
 
   const questions = useMemo<Question[]>(
-    () => generateGame(mode, mode === "daily" ? dailySeed() : undefined, loadRecent()),
+    () => generateGame(mode, mode === "daily" ? dailySeed() : undefined, mode === "daily" ? undefined : loadRecent()),
     [mode]
   );
 
@@ -44,10 +47,11 @@ export default function Game({ mode }: { mode: Mode }) {
   const [bestStreak, setBestStreak] = useState(0);
   const [marks, setMarks] = useState<boolean[]>([]);
   const [lastGain, setLastGain] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(QTIME);
+  const [showPerson, setShowPerson] = useState<Person | null>(null);
   const [summary, setSummary] = useState<{ newAch: string[]; levelUp: number | null; xp: number } | null>(null);
   const recorded = useRef(false);
-  const timer = useRef<number | null>(null);
-  /* authoritative tallies (immune to stale closures in timeouts) */
+  /* authoritative tallies (immune to stale closures) */
   const st = useRef({ marks: [] as boolean[], score: 0, streak: 0, best: 0 });
 
   const q = questions[idx];
@@ -60,17 +64,18 @@ export default function Game({ mode }: { mode: Mode }) {
   const finish = useCallback(() => {
     setPhase("done");
     sfx.complete();
+    pushRecent(questions.map((qq) => qq.answer.id)); // anti-repetition for the next game
     const m = st.current.marks;
     const cc = m.filter(Boolean).length;
-    let tail = 0;
-    for (let i = m.length - 1; i >= 0 && m[i]; i--) tail++;
     if (!recorded.current) {
       recorded.current = true;
-      pushRecent(questions.map((qq) => qq.answer.id));
       const perCat: Record<string, number> = {};
       questions.forEach((qq, i) => {
         if (m[i]) perCat[qq.answer.cat] = (perCat[qq.answer.cat] ?? 0) + 1;
       });
+      /* trailing correct tail feeds the cross-game mega streak */
+      let tail = 0;
+      for (let i = m.length - 1; i >= 0 && m[i]; i--) tail++;
       const finalScoreVal = st.current.score;
       const xp = Math.round(finalScoreVal / 12);
       const res = recordGame({ score: finalScoreVal, correct: cc, total: questions.length, bestStreak: st.current.best, tail, perCat, mode, xp });
@@ -82,7 +87,7 @@ export default function Game({ mode }: { mode: Mode }) {
   const pick = useCallback(
     (i: number) => {
       if (phase !== "ask" || !q) return;
-      const ok = q.options[i].id === q.answer.id;
+      const ok = i >= 0 && q.options[i].id === q.answer.id;
       setSel(i);
       st.current.marks = [...st.current.marks, ok];
       setMarks(st.current.marks);
@@ -110,33 +115,45 @@ export default function Game({ mode }: { mode: Mode }) {
     [phase, q]
   );
 
-  /* player-paced advance: read the fact, then hit NEXT */
-  const next = useCallback(() => {
+  /* per-question countdown — pauses during reveal */
+  useEffect(() => {
+    if (phase !== "ask") return;
+    if (timeLeft <= 0) {
+      pick(-1);
+      return;
+    }
+    const id = window.setTimeout(() => {
+      if (timeLeft <= 6) sfx.tick();
+      setTimeLeft((x) => x - 1);
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [phase, timeLeft, pick]);
+
+  const nextQ = useCallback(() => {
     if (phase !== "reveal") return;
     if (idx + 1 >= questions.length) finish();
     else {
       setIdx((x) => x + 1);
       setSel(null);
       setPhase("ask");
+      setTimeLeft(QTIME);
       sfx.flip();
     }
   }, [phase, idx, questions.length, finish]);
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-
-  // keyboard: 1-5 answers, Enter/Space → next
+  // keyboard: 1-5 to answer, Enter/Space for next
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const n = parseInt(e.key, 10);
       if (n >= 1 && n <= 5) pick(n - 1);
-      if (e.key === "Enter" || e.key === " ") {
+      if ((e.key === "Enter" || e.key === " ") && phase === "reveal") {
         e.preventDefault();
-        next();
+        nextQ();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pick, next]);
+  }, [pick, nextQ, phase]);
 
   if (!q && !done) return null;
 
@@ -223,7 +240,9 @@ export default function Game({ mode }: { mode: Mode }) {
   }
 
   /* ---------------- play screen ---------------- */
-  const isCorrect = sel !== null && q.options[sel].id === q.answer.id;
+  const timedOut = sel === -1;
+  const isCorrect = sel !== null && !timedOut && q.options[sel].id === q.answer.id;
+  const fact = factsOf(q.answer, lang)[0];
 
   return (
     <div className="min-h-screen flex flex-col" style={{ ["--acc" as string]: acc }}>
@@ -253,6 +272,9 @@ export default function Game({ mode }: { mode: Mode }) {
               />
             ))}
           </div>
+          <div className={`flex items-center gap-1.5 font-display text-sm ${timeLeft <= 5 && phase === "ask" ? "text-bad-400 animate-pulse" : "text-ink-300"}`} dir="ltr">
+            <span key={timeLeft} className="inline-block animate-tick w-6 text-center">{timeLeft}</span>
+          </div>
           <div className="flex items-center gap-2 font-display text-sm text-gold-400" dir="ltr">
             <IcStar size={15} />
             <span key={score} className="inline-block animate-tick">{score}</span>
@@ -261,6 +283,17 @@ export default function Game({ mode }: { mode: Mode }) {
             <IcFlame size={15} />
             <span key={streak} className="inline-block animate-tick">×{streak}</span>
           </div>
+        </div>
+        {/* countdown bar */}
+        <div className="h-1 bg-ink-800/80" dir="ltr">
+          <div
+            className="h-full transition-all duration-1000 ease-linear"
+            style={{
+              width: `${(timeLeft / QTIME) * 100}%`,
+              background: timeLeft <= 5 ? "#ff3b56" : acc,
+              boxShadow: timeLeft <= 5 ? "0 0 12px rgba(255,59,86,0.8)" : `0 0 8px ${acc}88`,
+            }}
+          />
         </div>
       </div>
 
@@ -294,32 +327,22 @@ export default function Game({ mode }: { mode: Mode }) {
             <p className="text-ink-400 text-xs mt-1 font-display tracking-widest">{t("question")} {idx + 1} / {QUESTIONS_PER_GAME} · <span style={{ color: DIFF_STYLE[q.diff].bar }}>{DIFF_POINTS[q.diff]} {t("points")}</span></p>
           </div>
 
-          {/* feedback + fact panel */}
-          <div className="min-h-10 mt-4 text-center" aria-live="polite">
+          {/* feedback banner + fact */}
+          <div className={`mt-4 text-center ${phase === "reveal" ? "" : "h-10"}`} aria-live="polite">
             {phase === "reveal" && (
-              <div className="inline-block max-w-2xl text-center animate-rise">
-                <div className={`inline-flex items-center gap-2 chip px-4 py-1.5 font-display text-sm ${isCorrect ? "bg-good-500/15 text-good-400 border border-good-500/50" : "bg-bad-500/15 text-bad-400 border border-bad-500/50"}`}>
+              <div className="animate-pop">
+                <div className={`inline-flex items-center gap-2 chip px-4 py-1.5 font-display text-sm ${timedOut || !isCorrect ? "bg-bad-500/15 text-bad-400 border border-bad-500/50" : "bg-good-500/15 text-good-400 border border-good-500/50"}`}>
                   {isCorrect ? <IcCheck size={16} /> : <IcX size={16} />}
-                  {isCorrect ? `${t("correct")} +${lastGain}` : `${t("wrong")} — ${t("it_was")} ${pname(q.answer, lang)}`}
+                  {timedOut
+                    ? `${t("time_up")} — ${t("it_was")} ${q.answer.name}`
+                    : isCorrect
+                      ? `${t("correct")} +${lastGain}`
+                      : `${t("wrong")} — ${t("it_was")} ${q.answer.name}`}
                 </div>
-                <p className="text-ink-300 text-xs sm:text-sm mt-2 leading-relaxed px-2">
-                  <span className="text-gold-400 font-semibold">💡</span> {revealFact(q.answer, lang)}
+                <p className="text-ink-300 text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed">
+                  <span className="font-display text-[9px] tracking-[0.25em] text-gold-500 me-2">{t("q_fact")}</span>
+                  {fact}
                 </p>
-                <div className="mt-2 flex items-center justify-center gap-4 text-[11px] font-display tracking-wider">
-                  {isCorrect && streak >= 2 && (
-                    <span className="text-coral-400 inline-flex items-center gap-1"><IcFlame size={12} /> {t("streak")} ×{streak}</span>
-                  )}
-                  <span className="text-mint-400 inline-flex items-center gap-1"><IcStar size={12} /> {t("score")} {score}</span>
-                </div>
-                <button
-                  onClick={() => { sfx.click(); next(); }}
-                  className="btn-game btn-primary px-8 py-3 text-sm mt-4"
-                >
-                  <span className="flex items-center gap-2">
-                    {idx + 1 >= questions.length ? t("results") : t("next")}
-                    <IcBolt size={14} />
-                  </span>
-                </button>
               </div>
             )}
           </div>
@@ -338,21 +361,21 @@ export default function Game({ mode }: { mode: Mode }) {
                 } else if (isSel) {
                   cls = "border-bad-500 ring-2 ring-bad-500/60 animate-shake";
                   style = { boxShadow: "0 0 30px -8px rgba(255,59,86,0.5)" };
-                } else cls = "border-ink-700/40 opacity-40";
+                } else cls = "border-ink-700/40 opacity-40 hover:opacity-90";
               }
               return (
                 <button
                   key={p.id}
-                  onClick={() => pick(i)}
-                  disabled={phase !== "ask"}
-                  className={`group relative chip glass card-3d p-2.5 sm:p-3 text-center border transition-all duration-200 cursor-pointer disabled:cursor-default animate-rise ${i === 4 ? "col-span-2 sm:col-span-1" : ""} ${cls}`}
+                  onClick={() => (phase === "ask" ? pick(i) : setShowPerson(p))}
+                  disabled={done}
+                  className={`group relative chip glass card-3d p-2.5 sm:p-3 text-center border transition-all duration-200 cursor-pointer animate-rise ${i === 4 ? "col-span-2 sm:col-span-1" : ""} ${cls}`}
                   style={{ ...style, animationDelay: `${i * 70}ms` }}
                 >
                   <span className="absolute top-1.5 start-1.5 font-display text-[10px] text-ink-400 group-hover:text-gold-400 transition-colors" dir="ltr">{i + 1}</span>
                   <div className="chip overflow-hidden aspect-[10/11] bg-ink-900">
                     <Avatar p={p} className="w-full h-full transition-transform duration-500 group-hover:scale-110" />
                   </div>
-                  <p className="font-semibold text-xs sm:text-sm text-ink-200 mt-2 leading-snug group-hover:text-gold-300 transition-colors">{pname(p, lang)}</p>
+                  <p className="font-semibold text-xs sm:text-sm text-ink-200 mt-2 leading-snug group-hover:text-gold-300 transition-colors">{p.name}</p>
                   <p className="text-[10px] text-ink-400 mt-0.5 font-display tracking-wider">
                     {p.year < 0 ? `${-p.year} ${t("bc")}` : p.year}
                   </p>
@@ -371,9 +394,23 @@ export default function Game({ mode }: { mode: Mode }) {
             })}
           </div>
 
-          <p className="text-center text-ink-400 text-[11px] mt-6 tracking-widest font-display hidden sm:block" dir="ltr">1 – 5 ⌨</p>
+          {/* next / finish */}
+          <div className="text-center mt-6">
+            {phase === "reveal" ? (
+              <button className="btn-game btn-primary px-8 py-3.5 text-sm animate-pop" onClick={nextQ}>
+                <span className="flex items-center gap-2">
+                  {idx + 1 >= questions.length ? t("finish") : t("next_q")}
+                  <IcBolt size={15} />
+                </span>
+              </button>
+            ) : (
+              <p className="text-ink-400 text-[11px] tracking-widest font-display hidden sm:block" dir="ltr">1 – 5 ⌨</p>
+            )}
+          </div>
         </div>
       </main>
+
+      {showPerson && <PersonModal p={showPerson} onClose={() => setShowPerson(null)} />}
     </div>
   );
 }

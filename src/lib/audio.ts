@@ -57,6 +57,7 @@ class Sfx {
   }
 
   click() { this.tone(680, 0, 0.07, "square", 0.12, 520); }
+  tick() { this.tone(940, 0, 0.045, "square", 0.07); }
   hover() { this.tone(440, 0, 0.04, "sine", 0.05); }
   flip() { this.tone(300, 0, 0.09, "triangle", 0.14, 560); this.noise(0, 0.06, 0.06, 2400); }
   correct() {

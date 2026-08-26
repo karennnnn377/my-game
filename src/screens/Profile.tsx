@@ -10,6 +10,8 @@ import { sfx } from "../lib/audio";
 import { useStore } from "../store";
 import { MONTHS, JALALI_MONTHS } from "../i18n";
 import type { CatId } from "../data/people";
+import { PEOPLE } from "../data/people";
+import { PersonCard } from "../components/PersonCard";
 
 type CalSys = "g" | "j";
 
@@ -245,6 +247,31 @@ export default function Profile() {
                 );
               })}
             </div>
+          </div>
+
+          {/* favorites */}
+          <div className="glass chip p-5 sm:p-6 animate-rise" style={{ animationDelay: "300ms" }}>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-gold-400 text-lg">❤️ {t("see_favs")}</h2>
+              <span className="text-xs text-ink-300 font-display" dir="ltr">{profile.favs.length}</span>
+            </div>
+            {profile.favs.length === 0 ? (
+              <div className="mt-4 text-center py-4">
+                <p className="text-ink-300 text-sm">{t("no_favs")}</p>
+                <button className="btn-game btn-ghost px-5 py-2.5 text-xs mt-4" onClick={() => { sfx.click(); go({ s: "search" }); }}>
+                  <span className="flex items-center gap-2">🔍 {t("nav_search")}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {profile.favs
+                  .map((id) => PEOPLE.find((p) => p.id === id))
+                  .filter((p): p is NonNullable<typeof p> => Boolean(p))
+                  .map((p, i) => (
+                    <PersonCard key={p.id} p={p} delay={i * 60} />
+                  ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

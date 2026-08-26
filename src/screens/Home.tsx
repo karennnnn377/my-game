@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Avatar } from "../components/Avatar";
-import { IcBolt, IcCake, IcFlame, IcGrid, IcPlay, IcTrophy, IcUser } from "../components/ui";
+import { IcBolt, IcCake, IcCal, IcFlame, IcGrid, IcPlay, IcSearch, IcTrophy, IcUser } from "../components/ui";
 import { CATS } from "../data/cats";
 import { BY_CAT, PEOPLE, TOTAL, bornOn, type Person } from "../data/people";
 import { CAT_NAMES } from "../i18n";
@@ -98,6 +98,12 @@ export default function Home() {
               </button>
               <button className="btn-game btn-ghost px-5 py-3 text-xs" onClick={() => { sfx.click(); go({ s: "lb" }); }}>
                 <span className="flex items-center gap-2"><IcTrophy size={14} /> {t("leaderboard_btn")}</span>
+              </button>
+              <button className="btn-game btn-ghost px-5 py-3 text-xs" onClick={() => { sfx.click(); go({ s: "search" }); }}>
+                <span className="flex items-center gap-2"><IcSearch size={14} /> {t("nav_search")}</span>
+              </button>
+              <button className="btn-game btn-ghost px-5 py-3 text-xs" onClick={() => { sfx.click(); go({ s: "bday" }); }}>
+                <span className="flex items-center gap-2"><IcCal size={14} /> {t("nav_mybday")}</span>
               </button>
             </div>
 
