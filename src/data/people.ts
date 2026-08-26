@@ -6,11 +6,11 @@
    ============================================================ */
 
 export type CatId =
-  | "football" | "actors" | "actresses" | "singers" | "musicians" | "rappers"
+  | "football" | "actors" | "actresses" | "singers" | "musicians" | "composers" | "rappers"
   | "basketball" | "tennis" | "racing" | "boxing" | "athletes"
   | "scientists" | "astronauts" | "historical" | "leaders" | "artists"
   | "writers" | "entrepreneurs" | "tech" | "gaming" | "tv" | "comedians"
-  | "internet" | "iran" | "world";
+  | "directors" | "internet" | "iran" | "world";
 
 export type Row = [string, number, number, number, number];
 
@@ -144,10 +144,18 @@ const RAW: Record<CatId, Row[]> = {
     ["Bob Dylan", 1941, 5, 24, 86], ["Bruce Springsteen", 1949, 9, 23, 82],
     ["Prince", 1958, 6, 7, 88], ["Stevie Wonder", 1950, 5, 13, 86],
     ["Ray Charles", 1930, 9, 23, 78], ["B.B. King", 1925, 9, 16, 72],
+  ],
+  composers: [
     ["W.A. Mozart", 1756, 1, 27, 94], ["L. van Beethoven", 1770, 12, 16, 94],
     ["J.S. Bach", 1685, 3, 31, 88], ["Frédéric Chopin", 1810, 3, 1, 84],
-    ["P. Tchaikovsky", 1840, 5, 7, 82], ["Hans Zimmer", 1957, 9, 12, 80],
-    ["John Williams", 1932, 2, 8, 80], ["Ennio Morricone", 1928, 11, 10, 74],
+    ["P. Tchaikovsky", 1840, 5, 7, 82], ["Antonio Vivaldi", 1678, 3, 4, 78],
+    ["G.F. Handel", 1685, 2, 23, 76], ["Johannes Brahms", 1833, 5, 7, 72],
+    ["Richard Wagner", 1813, 5, 22, 70], ["Giuseppe Verdi", 1813, 10, 10, 72],
+    ["Giacomo Puccini", 1858, 12, 22, 68], ["Claude Debussy", 1862, 8, 22, 66],
+    ["Maurice Ravel", 1875, 3, 7, 64], ["Antonín Dvořák", 1841, 9, 8, 64],
+    ["Edvard Grieg", 1843, 6, 15, 60], ["Franz Liszt", 1811, 10, 22, 64],
+    ["Johann Strauss II", 1825, 10, 25, 62], ["Hans Zimmer", 1957, 9, 12, 82],
+    ["John Williams", 1932, 2, 8, 80], ["Ennio Morricone", 1928, 11, 10, 76],
     ["A.R. Rahman", 1967, 1, 6, 76], ["Gustavo Santaolalla", 1951, 8, 19, 58],
   ],
   rappers: [
@@ -330,6 +338,22 @@ const RAW: Record<CatId, Row[]> = {
     ["Bill Burr", 1968, 6, 10, 64], ["Ali Wong", 1982, 4, 19, 62],
     ["Hasan Minhaj", 1985, 9, 23, 64],
   ],
+  directors: [
+    ["Steven Spielberg", 1946, 12, 18, 92], ["Martin Scorsese", 1942, 11, 17, 86],
+    ["Christopher Nolan", 1970, 7, 30, 90], ["Quentin Tarantino", 1963, 3, 27, 88],
+    ["James Cameron", 1954, 8, 16, 88], ["Alfred Hitchcock", 1899, 8, 13, 84],
+    ["Stanley Kubrick", 1928, 7, 26, 82], ["Francis Ford Coppola", 1939, 4, 7, 80],
+    ["Akira Kurosawa", 1910, 3, 23, 80], ["Federico Fellini", 1920, 1, 20, 76],
+    ["Hayao Miyazaki", 1941, 1, 5, 80], ["Ingmar Bergman", 1918, 7, 14, 72],
+    ["Jean-Luc Godard", 1930, 12, 3, 70], ["François Truffaut", 1932, 2, 6, 66],
+    ["David Fincher", 1962, 8, 28, 78], ["Ridley Scott", 1937, 11, 30, 76],
+    ["Tim Burton", 1958, 8, 25, 78], ["Peter Jackson", 1961, 10, 31, 76],
+    ["Guillermo del Toro", 1964, 10, 9, 76], ["Bong Joon-ho", 1969, 9, 14, 76],
+    ["Wes Anderson", 1969, 5, 1, 72], ["Denis Villeneuve", 1967, 10, 3, 72],
+    ["Pedro Almodóvar", 1949, 9, 25, 74], ["Andrei Tarkovsky", 1932, 4, 4, 66],
+    ["Asghar Farhadi", 1972, 5, 7, 66], ["Abbas Kiarostami", 1940, 6, 22, 64],
+    ["Majid Majidi", 1959, 2, 17, 56], ["Spike Lee", 1957, 3, 20, 68],
+  ],
   internet: [
     ["MrBeast", 1998, 5, 7, 90], ["Casey Neistat", 1981, 3, 25, 68],
     ["Charli D'Amelio", 2004, 5, 1, 74], ["Addison Rae", 2000, 10, 6, 70],
@@ -392,14 +416,18 @@ export interface Person {
   m: number; // birth month 1-12
   d: number; // birth day 1-31
   pop: number; // fame 1-100
+  cc?: string; // birth country / nationality code (see nations.ts)
+  nfa?: string; // localized Persian name
+  nar?: string; // localized Arabic name
 }
 
 export const PEOPLE: Person[] = [];
 export const BY_CAT: Record<string, Person[]> = {};
 export const BY_DATE: Map<string, Person[]> = new Map();
 
-/* merge append-only expansion packs into the master table */
+/* merge append-only expansion packs + identity enrichment into the master table */
 import { EXTRA } from "./more";
+import { NAT, L10N } from "./nations";
 (Object.keys(EXTRA) as CatId[]).forEach((c) => {
   const rows = EXTRA[c];
   if (rows) RAW[c].push(...rows);
@@ -409,6 +437,11 @@ import { EXTRA } from "./more";
   BY_CAT[cat] = [];
   RAW[cat].forEach(([name, year, m, d, pop], i) => {
     const p: Person = { id: `${cat}:${i}`, name, cat, year, m, d, pop };
+    const cc = NAT[name];
+    if (cc) p.cc = cc;
+    const loc = L10N[name];
+    if (loc?.fa) p.nfa = loc.fa;
+    if (loc?.ar) p.nar = loc.ar;
     PEOPLE.push(p);
     BY_CAT[cat].push(p);
     const key = `${m}-${d}`;
@@ -429,6 +462,28 @@ export function difficultyOf(pop: number): 0 | 1 | 2 | 3 {
 
 export function bornOn(m: number, d: number): Person[] {
   return BY_DATE.get(`${m}-${d}`) ?? [];
+}
+
+/* era buckets: 0 Ancient(BC) · 1 Medieval · 2 Early-modern · 3 Modern · 4 Contemporary */
+export function eraOf(year: number): 0 | 1 | 2 | 3 | 4 {
+  if (year < 1) return 0;
+  if (year < 1450) return 1;
+  if (year < 1800) return 2;
+  if (year < 1950) return 3;
+  return 4;
+}
+export const ERA_KEYS = ["era_ancient", "era_medieval", "era_early", "era_modern", "era_now"] as const;
+
+/** localized display name (falls back to English) */
+export function pname(p: Person, lang: "en" | "fa" | "ar"): string {
+  if (lang === "fa" && p.nfa) return p.nfa;
+  if (lang === "ar" && p.nar) return p.nar;
+  return p.name;
+}
+
+/** full-text haystack for search: name + localized + category + country */
+export function haystack(p: Person): string {
+  return [p.name, p.nfa ?? "", p.nar ?? "", p.cat, p.cc ?? ""].join(" ").toLowerCase();
 }
 
 export function randomPeople(n: number, rnd: () => number): Person[] {

@@ -84,8 +84,27 @@ function pickDistractors(answer: Person, rnd: () => number): Person[] {
   return out;
 }
 
-export function generateGame(mode: Mode, seed?: number): Question[] {
+/* ---- cross-game anti-repetition memory ---- */
+const RECENT_KEY = "gyfp:recent";
+export function loadRecent(): Set<string> {
+  try {
+    return new Set<string>(JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]") as string[]);
+  } catch {
+    return new Set<string>();
+  }
+}
+export function pushRecent(ids: string[]) {
+  try {
+    const cur = [...loadRecent(), ...ids].slice(-80);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(cur));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function generateGame(mode: Mode, seed?: number, recent?: Set<string>): Question[] {
   const rnd = seed !== undefined ? mulberry32(seed) : mulberry32((Math.random() * 2 ** 32) >>> 0);
+  const recents = recent ?? new Set<string>();
   const pool = poolFor(mode);
   const questions: Question[] = [];
   const usedDates = new Set<string>();
@@ -96,15 +115,20 @@ export function generateGame(mode: Mode, seed?: number): Question[] {
     // random difficulty target so every game feels different
     const targetDiff = mode === "mix" || mode === "daily" ? Math.floor(rnd() * 4) : Math.floor(rnd() * 3) + (rnd() < 0.4 ? 0 : 1);
     let answer: Person | undefined;
-    for (const p of ordered) {
-      if (usedAnswers.has(p.id)) continue;
-      const key = `${p.m}-${p.d}`;
-      if (usedDates.has(key)) continue;
-      const d = difficultyOf(p.pop);
-      if (d === targetDiff || d === targetDiff - 1 || d === targetDiff + 1) {
-        answer = p;
-        break;
+    /* two passes: first avoid people used in recent games, then relax */
+    for (const avoidRecent of [true, false]) {
+      for (const p of ordered) {
+        if (usedAnswers.has(p.id)) continue;
+        if (avoidRecent && recents.has(p.id)) continue;
+        const key = `${p.m}-${p.d}`;
+        if (usedDates.has(key)) continue;
+        const d = difficultyOf(p.pop);
+        if (d === targetDiff || d === targetDiff - 1 || d === targetDiff + 1) {
+          answer = p;
+          break;
+        }
       }
+      if (answer) break;
     }
     if (!answer) {
       for (const p of ordered) {

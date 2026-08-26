@@ -3,11 +3,12 @@ import { Avatar } from "../components/Avatar";
 import { DiffBadge, DIFF_STYLE, IcBack, IcBolt, IcCheck, IcFlame, IcStar, IcTarget, IcTrophy, IcX, LogoMark } from "../components/ui";
 import { MONTHS, ACH } from "../i18n";
 import { CAT_MAP } from "../data/cats";
-import type { Person } from "../data/people";
+import { pname, type Person } from "../data/people";
 import {
   DIFF_POINTS, QUESTIONS_PER_GAME, dailySeed, generateGame, levelFromXp,
-  streakBonus, type Mode, type Question,
+  loadRecent, pushRecent, streakBonus, type Mode, type Question,
 } from "../lib/engine";
+import { revealFact } from "../lib/bio";
 import { sfx } from "../lib/audio";
 import { fxBus, useStore } from "../store";
 
@@ -31,7 +32,7 @@ export default function Game({ mode }: { mode: Mode }) {
   const { t, cat, go, lang, profile, recordGame } = useStore();
 
   const questions = useMemo<Question[]>(
-    () => generateGame(mode, mode === "daily" ? dailySeed() : undefined),
+    () => generateGame(mode, mode === "daily" ? dailySeed() : undefined, loadRecent()),
     [mode]
   );
 
@@ -65,6 +66,7 @@ export default function Game({ mode }: { mode: Mode }) {
     for (let i = m.length - 1; i >= 0 && m[i]; i--) tail++;
     if (!recorded.current) {
       recorded.current = true;
+      pushRecent(questions.map((qq) => qq.answer.id));
       const perCat: Record<string, number> = {};
       questions.forEach((qq, i) => {
         if (m[i]) perCat[qq.answer.cat] = (perCat[qq.answer.cat] ?? 0) + 1;
@@ -104,30 +106,37 @@ export default function Game({ mode }: { mode: Mode }) {
         sfx.wrong();
       }
       setPhase("reveal");
-      timer.current = window.setTimeout(() => {
-        if (idx + 1 >= questions.length) finish();
-        else {
-          setIdx((x) => x + 1);
-          setSel(null);
-          setPhase("ask");
-          sfx.flip();
-        }
-      }, 1700);
     },
-    [phase, q, idx, questions.length, finish]
+    [phase, q]
   );
+
+  /* player-paced advance: read the fact, then hit NEXT */
+  const next = useCallback(() => {
+    if (phase !== "reveal") return;
+    if (idx + 1 >= questions.length) finish();
+    else {
+      setIdx((x) => x + 1);
+      setSel(null);
+      setPhase("ask");
+      sfx.flip();
+    }
+  }, [phase, idx, questions.length, finish]);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  // keyboard 1-5
+  // keyboard: 1-5 answers, Enter/Space → next
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const n = parseInt(e.key, 10);
       if (n >= 1 && n <= 5) pick(n - 1);
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        next();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pick]);
+  }, [pick, next]);
 
   if (!q && !done) return null;
 
@@ -285,12 +294,32 @@ export default function Game({ mode }: { mode: Mode }) {
             <p className="text-ink-400 text-xs mt-1 font-display tracking-widest">{t("question")} {idx + 1} / {QUESTIONS_PER_GAME} · <span style={{ color: DIFF_STYLE[q.diff].bar }}>{DIFF_POINTS[q.diff]} {t("points")}</span></p>
           </div>
 
-          {/* feedback banner */}
-          <div className="h-10 mt-4 text-center" aria-live="polite">
+          {/* feedback + fact panel */}
+          <div className="min-h-10 mt-4 text-center" aria-live="polite">
             {phase === "reveal" && (
-              <div className={`inline-flex items-center gap-2 chip px-4 py-1.5 font-display text-sm animate-pop ${isCorrect ? "bg-good-500/15 text-good-400 border border-good-500/50" : "bg-bad-500/15 text-bad-400 border border-bad-500/50"}`}>
-                {isCorrect ? <IcCheck size={16} /> : <IcX size={16} />}
-                {isCorrect ? `${t("correct")} +${lastGain}` : `${t("wrong")} — ${t("it_was")} ${q.answer.name}`}
+              <div className="inline-block max-w-2xl text-center animate-rise">
+                <div className={`inline-flex items-center gap-2 chip px-4 py-1.5 font-display text-sm ${isCorrect ? "bg-good-500/15 text-good-400 border border-good-500/50" : "bg-bad-500/15 text-bad-400 border border-bad-500/50"}`}>
+                  {isCorrect ? <IcCheck size={16} /> : <IcX size={16} />}
+                  {isCorrect ? `${t("correct")} +${lastGain}` : `${t("wrong")} — ${t("it_was")} ${pname(q.answer, lang)}`}
+                </div>
+                <p className="text-ink-300 text-xs sm:text-sm mt-2 leading-relaxed px-2">
+                  <span className="text-gold-400 font-semibold">💡</span> {revealFact(q.answer, lang)}
+                </p>
+                <div className="mt-2 flex items-center justify-center gap-4 text-[11px] font-display tracking-wider">
+                  {isCorrect && streak >= 2 && (
+                    <span className="text-coral-400 inline-flex items-center gap-1"><IcFlame size={12} /> {t("streak")} ×{streak}</span>
+                  )}
+                  <span className="text-mint-400 inline-flex items-center gap-1"><IcStar size={12} /> {t("score")} {score}</span>
+                </div>
+                <button
+                  onClick={() => { sfx.click(); next(); }}
+                  className="btn-game btn-primary px-8 py-3 text-sm mt-4"
+                >
+                  <span className="flex items-center gap-2">
+                    {idx + 1 >= questions.length ? t("results") : t("next")}
+                    <IcBolt size={14} />
+                  </span>
+                </button>
               </div>
             )}
           </div>
@@ -323,7 +352,7 @@ export default function Game({ mode }: { mode: Mode }) {
                   <div className="chip overflow-hidden aspect-[10/11] bg-ink-900">
                     <Avatar p={p} className="w-full h-full transition-transform duration-500 group-hover:scale-110" />
                   </div>
-                  <p className="font-semibold text-xs sm:text-sm text-ink-200 mt-2 leading-snug group-hover:text-gold-300 transition-colors">{p.name}</p>
+                  <p className="font-semibold text-xs sm:text-sm text-ink-200 mt-2 leading-snug group-hover:text-gold-300 transition-colors">{pname(p, lang)}</p>
                   <p className="text-[10px] text-ink-400 mt-0.5 font-display tracking-wider">
                     {p.year < 0 ? `${-p.year} ${t("bc")}` : p.year}
                   </p>

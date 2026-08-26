@@ -66,6 +66,13 @@ export const IcBack = (p: IcProps) => (
 );
 export const IcCheck = (p: IcProps) => <S {...p}><path d="m4.5 12.5 5 5L19.5 6.5" /></S>;
 export const IcX = (p: IcProps) => <S {...p}><path d="m6 6 12 12" /><path d="m18 6-12 12" /></S>;
+export const IcSearch = (p: IcProps) => <S {...p}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></S>;
+export const IcHeart = ({ filled, ...p }: IcProps & { filled?: boolean }) => (
+  <S {...p}><path d="M12 20.5s-7.5-4.6-9.5-9A5.4 5.4 0 0 1 12 6.6a5.4 5.4 0 0 1 9.5 4.9c-2 4.4-9.5 9-9.5 9Z" fill={filled ? "currentColor" : "none"} /></S>
+);
+export const IcGear = (p: IcProps) => (
+  <S {...p}><circle cx="12" cy="12" r="3.2" /><path d="M12 2.5v2.8M12 18.7v2.8M4.6 5.6l2 2M17.4 16.4l2 2M2.5 12h2.8M18.7 12h2.8M4.6 18.4l2-2M17.4 7.6l2-2" /></S>
+);
 export const IcEdit = (p: IcProps) => <S {...p}><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17Z" /><path d="m14 7 3 3" /></S>;
 
 /* ---------- difficulty ---------- */

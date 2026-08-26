@@ -11,7 +11,11 @@ export type Screen =
   | { s: "cats" }
   | { s: "game"; mode: Mode; n?: number }
   | { s: "lb" }
-  | { s: "profile" };
+  | { s: "profile" }
+  | { s: "search" }
+  | { s: "person"; id: string }
+  | { s: "bday" }
+  | { s: "set" };
 
 export interface Profile {
   name: string;
@@ -26,6 +30,9 @@ export interface Profile {
   bday: { gy: number; gm: number; gd: number } | null;
   cats: Partial<Record<CatId, number>>;
   ach: string[];
+  favs: string[]; // favorite person ids
+  avatar: number; // chosen avatar seed
+  calPref: "g" | "j"; // preferred calendar system
 }
 
 export interface GameResult {
@@ -61,6 +68,9 @@ const DEFAULT_PROFILE: Profile = {
   bday: null,
   cats: {},
   ach: [],
+  favs: [],
+  avatar: 0,
+  calPref: "g",
 };
 
 /* ---------------- persistence ---------------- */
@@ -154,6 +164,12 @@ interface Store {
   lbRows: (tab: "global" | "daily" | "weekly") => LbRow[];
   toasts: { id: number; icon: string; title: string }[];
   pushToast: (icon: string, title: string) => void;
+  /* identity extras */
+  isFav: (id: string) => boolean;
+  toggleFav: (id: string) => void;
+  setAvatar: (n: number) => void;
+  setCalPref: (c: "g" | "j") => void;
+  resetAll: () => void;
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -216,6 +232,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const setName = useCallback((n: string) => setProfile((p) => ({ ...p, name: n || p.name })), []);
   const saveBday = useCallback((b: Profile["bday"]) => setProfile((p) => ({ ...p, bday: b })), []);
+
+  const isFav = useCallback((id: string) => profile.favs.includes(id), [profile.favs]);
+  const toggleFav = useCallback(
+    (id: string) => {
+      setProfile((p) => ({
+        ...p,
+        favs: p.favs.includes(id) ? p.favs.filter((f) => f !== id) : [...p.favs, id],
+      }));
+      sfx.click();
+    },
+    []
+  );
+  const setAvatar = useCallback((n: number) => setProfile((p) => ({ ...p, avatar: n })), []);
+  const setCalPref = useCallback((c: "g" | "j") => setProfile((p) => ({ ...p, calPref: c })), []);
+  const resetAll = useCallback(() => {
+    setProfile({ ...DEFAULT_PROFILE });
+    setResults([]);
+    try {
+      localStorage.removeItem("gyfp:profile");
+      localStorage.removeItem("gyfp:results");
+      localStorage.removeItem("gyfp:recent");
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const recordGame = useCallback(
     (r: GameResult): { newAch: string[]; levelUp: number | null } => {
@@ -318,8 +359,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     () => ({
       lang, dir, setLang, t, cat, sound, toggleSound, screen, go,
       profile, setName, saveBday, recordGame, lbRows, toasts, pushToast,
+      isFav, toggleFav, setAvatar, setCalPref, resetAll,
     }),
-    [lang, dir, setLang, t, cat, sound, toggleSound, screen, go, profile, setName, saveBday, recordGame, lbRows, toasts, pushToast]
+    [lang, dir, setLang, t, cat, sound, toggleSound, screen, go, profile, setName, saveBday, recordGame, lbRows, toasts, pushToast, isFav, toggleFav, setAvatar, setCalPref, resetAll]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
