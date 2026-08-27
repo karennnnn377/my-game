@@ -20,7 +20,8 @@ export function LogoMark({ size = 40 }: { size?: number }) {
 }
 
 export function Logo({ onClick, compact = false }: { onClick?: () => void; compact?: boolean }) {
-  const { t } = useStore();
+  const { t, lang } = useStore();
+  const rtl = lang !== "en";
   return (
     <button onClick={onClick} className="flex items-center gap-2.5 group cursor-pointer select-none shrink-0" aria-label="Guess Your Famous People">
       <span className="transition-transform duration-300 group-hover:rotate-[18deg] group-hover:scale-110 inline-flex">
@@ -28,8 +29,8 @@ export function Logo({ onClick, compact = false }: { onClick?: () => void; compa
       </span>
       {!compact && (
         <span className="text-start leading-none hidden min-[430px]:block">
-          <span className="block font-display text-[10px] tracking-[0.32em] text-mint-400">GUESS YOUR</span>
-          <span className="block font-display text-base sm:text-lg text-gold-400 leading-tight">{t("brand_sub")}</span>
+          <span className={`block font-display text-[10px] text-mint-400 ${rtl ? "" : "tracking-[0.32em]"}`}>{t("brand_1")}</span>
+          <span className={`block font-display text-base sm:text-lg text-gold-400 leading-tight ${rtl ? "" : "tracking-[0.08em]"}`}>{t("brand_2")}</span>
         </span>
       )}
     </button>

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Avatar } from "../components/Avatar";
 import { PersonCard } from "../components/PersonCard";
 import { DiffBadge, IcBack, IcHeart, IcPlay, IcStar } from "../components/ui";
-import { PEOPLE, pname, eraOf, ERA_KEYS, difficultyOf, bornOn, type Person } from "../data/people";
+import { PEOPLE, pname, eraOf, ERA_KEYS, difficultyOf, rarityOf, bornOn, type Person } from "../data/people";
 import { CAT_MAP } from "../data/cats";
 import { flagOf, countryName } from "../data/nations";
 import { bioOf, factsOf, professionOf } from "../lib/bio";
@@ -10,6 +10,9 @@ import { gregorianToJalali } from "../lib/calendar";
 import { MONTHS, JALALI_MONTHS } from "../i18n";
 import { sfx } from "../lib/audio";
 import { useStore } from "../store";
+
+const RARITY_KEY = ["r_common", "r_rare", "r_epic", "r_legend"] as const;
+const RARITY_BG = ["#8b9cc9", "#3fe3d6", "#c084fc", "#ffc94d"];
 
 export default function PersonDetail({ id }: { id: string }) {
   const { t, cat, go, lang, isFav, toggleFav } = useStore();
@@ -37,6 +40,15 @@ export default function PersonDetail({ id }: { id: string }) {
   const jDate = j ? `${j.jd} ${JALALI_MONTHS[lang][j.jm - 1]} ${j.jy}` : null;
   const twins = bornOn(p.m, p.d).filter((x) => x.id !== p.id).slice(0, 6);
   const facts = factsOf(p, lang);
+  /* related: compatriots first, then legends of the same arena (deduped) */
+  const related = useMemo<Person[]>(() => {
+    const seen = new Set<string>([p.id]);
+    const out: Person[] = [];
+    const push = (x: Person) => { if (!seen.has(x.id)) { seen.add(x.id); out.push(x); } };
+    if (p.cc) PEOPLE.filter((x) => x.cc === p.cc && x.id !== p.id).sort((a, b) => b.pop - a.pop).slice(0, 3).forEach(push);
+    PEOPLE.filter((x) => x.cat === p.cat && x.id !== p.id).sort((a, b) => b.pop - a.pop).slice(0, 6).forEach(push);
+    return out.slice(0, 6);
+  }, [p]);
 
   const rows: { label: string; value: React.ReactNode }[] = [
     { label: t("profession"), value: professionOf(p, lang) },
@@ -58,6 +70,16 @@ export default function PersonDetail({ id }: { id: string }) {
           <div className="relative chip overflow-hidden border-2" style={{ borderColor: `${meta.c1}66`, boxShadow: `0 0 60px -18px ${meta.c1}aa` }}>
             <Avatar p={p} className="w-full h-auto" />
             <span className="absolute top-2.5 start-2.5"><DiffBadge diff={diff} /></span>
+            <span
+              className="absolute bottom-2.5 start-2.5 chip px-2.5 py-1 font-display text-[10px] tracking-[0.2em] uppercase"
+              style={{
+                background: `${RARITY_BG[rarityOf(p.pop)]}22`,
+                border: `1px solid ${RARITY_BG[rarityOf(p.pop)]}66`,
+                color: RARITY_BG[rarityOf(p.pop)],
+              }}
+            >
+              {t(RARITY_KEY[rarityOf(p.pop)])}
+            </span>
           </div>
 
           <div className="mt-4 flex gap-2.5">
@@ -133,6 +155,18 @@ export default function PersonDetail({ id }: { id: string }) {
           <p className="text-ink-400 text-sm mt-1">{t("p_twins_sub")}</p>
           <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {twins.map((tw, i) => <PersonCard key={tw.id} p={tw} delay={i * 60} />)}
+          </div>
+        </div>
+      )}
+
+      {/* related legends: compatriots + same arena */}
+      {related.length > 0 && (
+        <div className="mt-12">
+          <h2 className="font-display text-2xl text-ink-200">
+            <span className="text-mint-400">▸</span> {t("related")}
+          </h2>
+          <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {related.map((rp, i) => <PersonCard key={rp.id} p={rp} delay={i * 60} />)}
           </div>
         </div>
       )}

@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Avatar } from "../components/Avatar";
 import { IcBolt, IcCake, IcCal, IcFlame, IcGrid, IcPlay, IcSearch, IcTrophy, IcUser } from "../components/ui";
 import { CATS } from "../data/cats";
-import { BY_CAT, PEOPLE, TOTAL, bornOn, type Person } from "../data/people";
+import { BY_CAT, PEOPLE, TOTAL, bornOn, CAT_IDS, type Person } from "../data/people";
 import { CAT_NAMES } from "../i18n";
-import { mulberry32 } from "../lib/engine";
+import { mulberry32, QUESTIONS_PER_GAME } from "../lib/engine";
+import { digits } from "../lib/num";
 import { sfx } from "../lib/audio";
 import { useStore } from "../store";
 
@@ -50,10 +51,10 @@ export default function Home() {
   ];
 
   const stats = [
-    { v: `${TOTAL}+`, l: t("st_legends") },
-    { v: "25", l: t("st_cats") },
-    { v: "15", l: t("st_questions") },
-    { v: "3", l: t("st_langs") },
+    { v: `${digits(TOTAL, lang)}+`, l: t("st_legends") },
+    { v: digits(CAT_IDS.length, lang), l: t("st_cats") },
+    { v: digits(QUESTIONS_PER_GAME, lang), l: t("st_questions") },
+    { v: digits(3, lang), l: t("st_langs") },
   ];
 
   return (
@@ -70,12 +71,12 @@ export default function Home() {
         <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-10 items-center">
           {/* left: the pitch */}
           <div className="relative z-10">
-            <span className="chip inline-flex items-center gap-2 border border-mint-500/40 bg-mint-500/10 px-3 py-1.5 text-mint-400 font-display text-[11px] tracking-[0.22em] animate-fade-up">
-              <IcBolt size={13} /> THE ULTIMATE FAME QUIZ ARENA
+            <span className={`chip inline-flex items-center gap-2 border border-mint-500/40 bg-mint-500/10 px-3 py-1.5 text-mint-400 font-display text-[11px] animate-fade-up ${lang === "en" ? "tracking-[0.22em]" : ""}`}>
+              <IcBolt size={13} /> {t("brand_tag")}
             </span>
             <h1 className="mt-5 leading-[0.95] animate-fade-up" style={{ animationDelay: "90ms" }}>
-              <span className="block font-display text-4xl sm:text-6xl xl:text-7xl text-outline">GUESS YOUR</span>
-              <span className="block font-display text-4xl sm:text-6xl xl:text-7xl shimmer-text mt-2">FAMOUS PEOPLE</span>
+              <span className={`block font-display text-4xl sm:text-6xl xl:text-7xl text-outline ${lang === "en" ? "" : "leading-snug"}`}>{t("brand_1")}</span>
+              <span className={`block font-display text-4xl sm:text-6xl xl:text-7xl shimmer-text mt-2 ${lang === "en" ? "" : "leading-snug"}`}>{t("brand_2")}</span>
             </h1>
             <p className="mt-5 text-ink-300 text-base sm:text-xl max-w-xl animate-fade-up" style={{ animationDelay: "180ms" }}>
               {t("hero_sub")}

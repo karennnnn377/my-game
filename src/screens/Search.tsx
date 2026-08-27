@@ -10,9 +10,9 @@ import { useStore } from "../store";
 
 const PAGE = 24;
 
-export default function Search() {
+export default function Search({ initQ }: { initQ?: string }) {
   const { t, cat, go, lang, isFav } = useStore();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initQ ?? "");
   const [fCat, setFCat] = useState<"all" | CatId>("all");
   const [fDiff, setFDiff] = useState<number>(-1);
   const [fEra, setFEra] = useState<number>(-1);

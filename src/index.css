@@ -239,6 +239,75 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 
+/* ---------- collectible rarity frames ---------- */
+
+.rarity {
+  position: relative;
+  border-width: 1.5px;
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.15), box-shadow 0.3s, border-color 0.3s;
+}
+.rarity-common { border-color: rgba(139, 156, 201, 0.35); }
+.rarity-rare {
+  border-color: rgba(63, 227, 214, 0.6);
+  box-shadow: 0 0 22px -8px rgba(63, 227, 214, 0.45), inset 0 0 18px -12px rgba(63, 227, 214, 0.5);
+}
+.rarity-epic {
+  border-color: rgba(192, 132, 252, 0.65);
+  box-shadow: 0 0 26px -8px rgba(192, 132, 252, 0.55), inset 0 0 20px -12px rgba(192, 132, 252, 0.55);
+}
+.rarity-legend {
+  border-color: rgba(255, 201, 77, 0.8);
+  box-shadow: 0 0 30px -8px rgba(255, 180, 0, 0.6), inset 0 0 22px -12px rgba(255, 201, 77, 0.6);
+  animation: legendPulse 2.8s ease-in-out infinite;
+}
+@keyframes legendPulse {
+  0%, 100% { box-shadow: 0 0 26px -8px rgba(255, 180, 0, 0.55), inset 0 0 22px -12px rgba(255, 201, 77, 0.55); }
+  50% { box-shadow: 0 0 38px -6px rgba(255, 180, 0, 0.8), inset 0 0 26px -10px rgba(255, 201, 77, 0.75); }
+}
+/* holographic sweep */
+.holo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.16) 46%, rgba(120, 255, 236, 0.22) 50%, rgba(255, 255, 255, 0.16) 54%, transparent 68%);
+  transform: translateX(-130%);
+}
+html[dir="rtl"] .holo::before { transform: translateX(130%); }
+.holo:hover::before { animation: holoSweep 0.9s ease forwards; }
+html[dir="rtl"] .holo:hover::before { animation-name: holoSweepRtl; }
+@keyframes holoSweep { to { transform: translateX(130%); } }
+@keyframes holoSweepRtl { to { transform: translateX(-130%); } }
+
+/* category-tinted card backdrop */
+.catbg {
+  position: relative;
+  background:
+    radial-gradient(120% 90% at 85% 0%, var(--gcA, rgba(255, 180, 0, 0.14)), transparent 55%),
+    radial-gradient(120% 110% at 10% 100%, var(--gcB, rgba(63, 227, 214, 0.1)), transparent 55%),
+    linear-gradient(165deg, rgba(27, 42, 86, 0.62), rgba(11, 18, 40, 0.72));
+}
+/* corner ticks for premium frames */
+.corner-ticks::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) top left / 12px 2px,
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) top left / 2px 12px,
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) top right / 12px 2px,
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) top right / 2px 12px,
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) bottom left / 12px 2px,
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) bottom left / 2px 12px,
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) bottom right / 12px 2px,
+    linear-gradient(var(--tick, #ffc94d), var(--tick, #ffc94d)) bottom right / 2px 12px;
+  background-repeat: no-repeat;
+  opacity: 0.85;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

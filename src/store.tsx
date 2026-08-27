@@ -12,7 +12,7 @@ export type Screen =
   | { s: "game"; mode: Mode; n?: number }
   | { s: "lb" }
   | { s: "profile" }
-  | { s: "search" }
+  | { s: "search"; q?: string }
   | { s: "person"; id: string }
   | { s: "bday" }
   | { s: "set" };
@@ -189,6 +189,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = dir;
+    document.title =
+      lang === "fa"
+        ? "حدس بزن افراد مشهور را — بازی کوییز مشاهیر"
+        : lang === "ar"
+          ? "خمّن مشاهيرك — لعبة اختبار المشاهير"
+          : "Guess Your Famous People — The Ultimate Celebrity Quiz Game";
   }, [lang, dir]);
 
   useEffect(() => {

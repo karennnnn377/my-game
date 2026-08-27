@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { IcBack, IcFlame, IcTarget, IcTrophy } from "../components/ui";
 import { sfx } from "../lib/audio";
+import { digits, num } from "../lib/num";
 import { useStore } from "../store";
 
 type Tab = "global" | "daily" | "weekly";
 
 export default function Leaderboard() {
-  const { t, go, lbRows, profile } = useStore();
+  const { t, go, lbRows, profile, lang } = useStore();
   const [tab, setTab] = useState<Tab>("global");
   const rows = useMemo(() => lbRows(tab), [lbRows, tab]);
   const tabs: { id: Tab; icon: string }[] = [
@@ -61,7 +62,7 @@ export default function Leaderboard() {
               }`}
               style={{ animationDelay: `${Math.min(i * 40, 600)}ms` }}
             >
-              <span className="font-display text-ink-300" dir="ltr">{medal ?? `#${i + 1}`}</span>
+              <span className="font-display text-ink-300" dir="ltr">{medal ?? `#${digits(i + 1, lang)}`}</span>
               <span className="flex items-center gap-2 min-w-0">
                 <span
                   className="w-7 h-7 shrink-0 chip flex items-center justify-center font-display text-[10px]"
@@ -72,10 +73,10 @@ export default function Leaderboard() {
                 <span className={`truncate font-semibold ${r.you ? "text-gold-400" : "text-ink-200"}`}>{r.you ? profile.name : r.name}</span>
                 {r.you && <span className="chip bg-gold-500 text-ink-950 font-display text-[9px] px-1.5 py-0.5">{t("you_row")}</span>}
               </span>
-              <span className="text-end font-display text-gold-400" dir="ltr">{r.score}</span>
-              <span className="text-end text-ink-300 hidden sm:block" dir="ltr">{r.acc}%</span>
-              <span className="text-end text-coral-400 font-display" dir="ltr">×{r.streak}</span>
-              <span className="text-end text-mint-400 font-display" dir="ltr">{r.level}</span>
+              <span className="text-end font-display text-gold-400" dir="ltr">{num(r.score, lang)}</span>
+              <span className="text-end text-ink-300 hidden sm:block" dir="ltr">{digits(r.acc, lang)}{lang === "en" ? "%" : "٪"}</span>
+              <span className="text-end text-coral-400 font-display" dir="ltr">×{digits(r.streak, lang)}</span>
+              <span className="text-end text-mint-400 font-display" dir="ltr">{digits(r.level, lang)}</span>
             </div>
           );
         })}

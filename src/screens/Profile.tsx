@@ -7,6 +7,7 @@ import { CAT_MAP } from "../data/cats";
 import { bornOn } from "../data/people";
 import { levelFromXp, xpForLevel } from "../lib/engine";
 import { sfx } from "../lib/audio";
+import { digits, num } from "../lib/num";
 import { useStore } from "../store";
 import { MONTHS, JALALI_MONTHS } from "../i18n";
 import type { CatId } from "../data/people";
@@ -60,13 +61,13 @@ export default function Profile() {
   const selCls = "chip glass border-ink-600/50 px-2 py-2 text-sm text-ink-200 bg-ink-900/60 focus:border-gold-500/60 outline-none cursor-pointer";
 
   const stats = [
-    { l: t("p_games"), v: String(profile.games), c: "#ffb400" },
-    { l: t("p_questions"), v: String(profile.answered), c: "#3fe3d6" },
-    { l: t("p_correct"), v: String(profile.correct), c: "#22e584" },
-    { l: t("accuracy"), v: `${acc}%`, c: "#ff6b7e" },
-    { l: t("p_hiscore"), v: String(profile.bestScore), c: "#ffd97a" },
-    { l: t("best_streak"), v: `×${profile.bestStreak}`, c: "#c084fc" },
-    { l: t("p_run"), v: `×${profile.bestRun}`, c: "#ff8a5c" },
+    { l: t("p_games"), v: digits(profile.games, lang), c: "#ffb400" },
+    { l: t("p_questions"), v: digits(profile.answered, lang), c: "#3fe3d6" },
+    { l: t("p_correct"), v: digits(profile.correct, lang), c: "#22e584" },
+    { l: t("accuracy"), v: `${digits(acc, lang)}${lang === "en" ? "%" : "٪"}`, c: "#ff6b7e" },
+    { l: t("p_hiscore"), v: num(profile.bestScore, lang), c: "#ffd97a" },
+    { l: t("best_streak"), v: `×${digits(profile.bestStreak, lang)}`, c: "#c084fc" },
+    { l: t("p_run"), v: `×${digits(profile.bestRun, lang)}`, c: "#ff8a5c" },
   ];
 
   return (
@@ -108,9 +109,9 @@ export default function Profile() {
             )}
             <p className="text-ink-400 text-xs mt-1">{t("p_name_hint")}</p>
             <div className="flex items-center gap-3 mt-3 flex-wrap">
-              <span className="chip bg-mint-500/15 border border-mint-500/40 text-mint-400 font-display text-xs px-2.5 py-1">{t("th_level")} {level}</span>
+              <span className="chip bg-mint-500/15 border border-mint-500/40 text-mint-400 font-display text-xs px-2.5 py-1">{t("th_level")} {digits(level, lang)}</span>
               <span className="chip bg-gold-500/15 border border-gold-500/40 text-gold-400 font-display text-xs px-2.5 py-1 inline-flex items-center gap-1.5">
-                <IcStar size={12} /> {profile.xp} XP
+                <IcStar size={12} /> {num(profile.xp, lang)} XP
               </span>
             </div>
             {/* xp bar */}
@@ -122,7 +123,7 @@ export default function Profile() {
             </div>
           </div>
           <div className="text-center">
-            <p className="font-display text-4xl text-gold-400" dir="ltr">{acc}%</p>
+            <p className="font-display text-4xl text-gold-400" dir="ltr">{digits(acc, lang)}{lang === "en" ? "%" : "٪"}</p>
             <p className="text-xs text-ink-300">{t("accuracy")}</p>
           </div>
         </div>

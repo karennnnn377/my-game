@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "../components/Avatar";
 import { PersonModal } from "../components/PersonCard";
 import { DiffBadge, DIFF_STYLE, IcBack, IcBolt, IcCheck, IcFlame, IcStar, IcTarget, IcTrophy, IcX, LogoMark } from "../components/ui";
-import { MONTHS, ACH } from "../i18n";
+import { MONTHS, ACH, fmt } from "../i18n";
 import { CAT_MAP } from "../data/cats";
 import type { Person } from "../data/people";
 import { factsOf } from "../lib/bio";
@@ -11,6 +11,7 @@ import {
   loadRecent, pushRecent, streakBonus, type Mode, type Question,
 } from "../lib/engine";
 import { sfx } from "../lib/audio";
+import { digits, num } from "../lib/num";
 import { fxBus, useStore } from "../store";
 
 const QTIME = 20; // seconds per question
@@ -174,21 +175,21 @@ export default function Game({ mode }: { mode: Mode }) {
             {mode === "daily" ? t("daily_badge") : mode === "mix" ? t("random_mix").toUpperCase() : cat(mode).toUpperCase()}
           </p>
           <h1 className="font-display text-3xl sm:text-5xl text-gold-400 mt-3 leading-tight">
-            {questions.length}/{questions.length}
+            {digits(questions.length, lang)}/{digits(questions.length, lang)}
             <span className="block text-lg sm:text-2xl text-ink-200 mt-2">{t("complete")}</span>
           </h1>
-          <p className="font-display text-coral-400 text-sm sm:text-base mt-3 tracking-widest">{grade}</p>
+          <p className="font-display text-coral-400 text-sm sm:text-base mt-3">{grade}</p>
 
           <div className="mt-7">
             <p className="text-ink-300 text-xs uppercase tracking-[0.25em]">{t("final_score")}</p>
-            <p className="font-display text-6xl sm:text-7xl shimmer-text mt-1" dir="ltr">{finalScore}</p>
+            <p className="font-display text-6xl sm:text-7xl shimmer-text mt-1" dir="ltr">{num(finalScore, lang)}</p>
           </div>
 
           <div className="grid grid-cols-3 gap-3 mt-8">
             {[
-              { icon: <IcCheck size={18} />, label: t("p_correct"), val: `${correctCount}/${questions.length}`, c: "#22e584" },
-              { icon: <IcTarget size={18} />, label: t("accuracy"), val: `${accuracy}%`, c: "#ffb400" },
-              { icon: <IcFlame size={18} />, label: t("best_streak"), val: `×${bestStreak}`, c: "#ff6b7e" },
+              { icon: <IcCheck size={18} />, label: t("p_correct"), val: `${digits(correctCount, lang)}/${digits(questions.length, lang)}`, c: "#22e584" },
+              { icon: <IcTarget size={18} />, label: t("accuracy"), val: `${digits(accuracy, lang)}${lang === "en" ? "%" : "٪"}`, c: "#ffb400" },
+              { icon: <IcFlame size={18} />, label: t("best_streak"), val: `×${digits(bestStreak, lang)}`, c: "#ff6b7e" },
             ].map((s, i) => (
               <div key={i} className="chip glass p-3 sm:p-4 animate-rise" style={{ animationDelay: `${i * 120}ms` }}>
                 <span className="inline-flex" style={{ color: s.c }}>{s.icon}</span>
@@ -199,8 +200,8 @@ export default function Game({ mode }: { mode: Mode }) {
           </div>
 
           <div className="mt-5 flex items-center justify-center gap-2 text-mint-400 font-display text-sm animate-fade-up" style={{ animationDelay: "350ms" }}>
-            <IcStar size={16} /> +{summary?.xp ?? 0} {t("xp_gained")}
-            <span className="text-ink-300 font-body text-xs">· {t("th_level")} {lvl}</span>
+            <IcStar size={16} /> +{digits(summary?.xp ?? 0, lang)} {t("xp_gained")}
+            <span className="text-ink-300 font-body text-xs">· {t("th_level")} {digits(lvl, lang)}</span>
           </div>
 
           {summary?.levelUp && (
@@ -254,10 +255,12 @@ export default function Game({ mode }: { mode: Mode }) {
           </button>
           <div className="flex items-center gap-2">
             <LogoMark size={26} />
-            <span className="font-display text-xs text-ink-200 hidden sm:block" dir="ltr">Q{idx + 1}/{questions.length}</span>
+            <span className="font-display text-xs text-ink-200 hidden sm:block">
+              {fmt(t("q_counter"), { a: digits(idx + 1, lang), b: digits(questions.length, lang) })}
+            </span>
           </div>
-          {/* progress segments */}
-          <div className="flex-1 flex items-center gap-1" dir="ltr">
+          {/* progress segments — mirrored automatically in RTL */}
+          <div className="flex-1 flex items-center gap-1">
             {Array.from({ length: questions.length }, (_, i) => (
               <span
                 key={i}
@@ -272,20 +275,20 @@ export default function Game({ mode }: { mode: Mode }) {
               />
             ))}
           </div>
-          <div className={`flex items-center gap-1.5 font-display text-sm ${timeLeft <= 5 && phase === "ask" ? "text-bad-400 animate-pulse" : "text-ink-300"}`} dir="ltr">
-            <span key={timeLeft} className="inline-block animate-tick w-6 text-center">{timeLeft}</span>
+          <div className={`flex items-center gap-1.5 font-display text-sm ${timeLeft <= 5 && phase === "ask" ? "text-bad-400 animate-pulse" : "text-ink-300"}`}>
+            <span key={timeLeft} className="inline-block animate-tick w-6 text-center">{digits(timeLeft, lang)}</span>
           </div>
-          <div className="flex items-center gap-2 font-display text-sm text-gold-400" dir="ltr">
+          <div className="flex items-center gap-2 font-display text-sm text-gold-400">
             <IcStar size={15} />
-            <span key={score} className="inline-block animate-tick">{score}</span>
+            <span key={score} className="inline-block animate-tick" dir="ltr">{num(score, lang)}</span>
           </div>
-          <div className={`flex items-center gap-1 font-display text-sm ${streak >= 3 ? "text-coral-400" : "text-ink-300"}`} dir="ltr">
+          <div className={`flex items-center gap-1 font-display text-sm ${streak >= 3 ? "text-coral-400" : "text-ink-300"}`}>
             <IcFlame size={15} />
-            <span key={streak} className="inline-block animate-tick">×{streak}</span>
+            <span key={streak} className="inline-block animate-tick">×{digits(streak, lang)}</span>
           </div>
         </div>
-        {/* countdown bar */}
-        <div className="h-1 bg-ink-800/80" dir="ltr">
+        {/* countdown bar — mirrors with document direction */}
+        <div className="h-1 bg-ink-800/80">
           <div
             className="h-full transition-all duration-1000 ease-linear"
             style={{
@@ -324,7 +327,7 @@ export default function Game({ mode }: { mode: Mode }) {
             </div>
 
             <h2 className="font-display text-lg sm:text-2xl text-ink-200 mt-5">{t("who_born")}</h2>
-            <p className="text-ink-400 text-xs mt-1 font-display tracking-widest">{t("question")} {idx + 1} / {QUESTIONS_PER_GAME} · <span style={{ color: DIFF_STYLE[q.diff].bar }}>{DIFF_POINTS[q.diff]} {t("points")}</span></p>
+            <p className="text-ink-400 text-xs mt-1 font-display">{fmt(t("q_counter"), { a: digits(idx + 1, lang), b: digits(QUESTIONS_PER_GAME, lang) })} · <span style={{ color: DIFF_STYLE[q.diff].bar }}>{digits(DIFF_POINTS[q.diff], lang)} {t("points")}</span></p>
           </div>
 
           {/* feedback banner + fact */}
@@ -336,7 +339,7 @@ export default function Game({ mode }: { mode: Mode }) {
                   {timedOut
                     ? `${t("time_up")} — ${t("it_was")} ${q.answer.name}`
                     : isCorrect
-                      ? `${t("correct")} +${lastGain}`
+                      ? `${t("correct")} +${digits(lastGain, lang)}`
                       : `${t("wrong")} — ${t("it_was")} ${q.answer.name}`}
                 </div>
                 <p className="text-ink-300 text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed">

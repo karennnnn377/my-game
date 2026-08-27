@@ -9,6 +9,19 @@ type Entry = [string, string, string]; // [en, fa, ar]
 const L: Record<string, Entry> = {
   // nav / brand
   brand_sub: ["FAMOUS PEOPLE", "افراد مشهور", "المشاهير"],
+  brand_1: ["GUESS YOUR", "حدس بزن", "خمّن"],
+  brand_2: ["FAMOUS PEOPLE", "افراد مشهور را", "مشاهيرك"],
+  brand_tag: ["THE ULTIMATE FAME QUIZ ARENA", "میدان نهایی کوییز شهرت", "ساحة اختبار الشهرة الكبرى"],
+  // rarity tiers
+  r_common: ["Common", "معمولی", "عادي"],
+  r_rare: ["Rare", "کمیاب", "نادر"],
+  r_epic: ["Epic", "حماسی", "ملحمي"],
+  r_legend: ["Legend", "افسانه", "أسطورة"],
+  // person profile extras
+  fame_meter: ["Fame Rating", "میزان شهرت", "مستوى الشهرة"],
+  related: ["Related Legends", "مشاهیر مرتبط", "مشاهير مرتبطون"],
+  ach_list: ["Claim To Fame", "افتخارات", "أشهر الإنجازات"],
+  city_label: ["Birthplace", "زادگاه", "مسقط الرأس"],
   nav_home: ["Home", "خانه", "الرئيسية"],
   nav_play: ["Play", "بازی", "العب"],
   nav_cats: ["Categories", "دسته‌ها", "الفئات"],
@@ -51,6 +64,7 @@ const L: Record<string, Entry> = {
   // game
   who_born: ["WHO WAS BORN ON THIS DATE?", "چه کسی در این تاریخ به دنیا آمده است؟", "من وُلد في هذا التاريخ؟"],
   question: ["Question", "سؤال", "سؤال"],
+  q_counter: ["Question {a} / {b}", "سؤال {a} از {b}", "السؤال {a} من {b}"],
   score: ["Score", "امتیاز", "النقاط"],
   streak: ["Streak", "رکورد پیاپی", "سلسلة"],
   best: ["Best", "بهترین", "الأفضل"],

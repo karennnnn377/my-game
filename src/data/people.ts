@@ -427,9 +427,14 @@ export const BY_DATE: Map<string, Person[]> = new Map();
 
 /* merge append-only expansion packs + identity enrichment into the master table */
 import { EXTRA } from "./more";
+import { PACK2 } from "./pack2";
 import { NAT, L10N } from "./nations";
 (Object.keys(EXTRA) as CatId[]).forEach((c) => {
   const rows = EXTRA[c];
+  if (rows) RAW[c].push(...rows);
+});
+(Object.keys(PACK2) as CatId[]).forEach((c) => {
+  const rows = PACK2[c];
   if (rows) RAW[c].push(...rows);
 });
 
@@ -458,6 +463,14 @@ export function difficultyOf(pop: number): 0 | 1 | 2 | 3 {
   if (pop >= 74) return 1; // MEDIUM
   if (pop >= 58) return 2; // HARD
   return 3; // IMPOSSIBLE
+}
+
+/** collectible rarity tier: 0 common · 1 rare · 2 epic · 3 legend */
+export function rarityOf(pop: number): 0 | 1 | 2 | 3 {
+  if (pop >= 90) return 3;
+  if (pop >= 75) return 2;
+  if (pop >= 60) return 1;
+  return 0;
 }
 
 export function bornOn(m: number, d: number): Person[] {

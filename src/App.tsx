@@ -202,7 +202,7 @@ function Shell() {
             {screen.s === "game" && <Game mode={screen.mode} />}
             {screen.s === "lb" && <Leaderboard />}
             {screen.s === "profile" && <Profile />}
-            {screen.s === "search" && <Search />}
+            {screen.s === "search" && <Search initQ={screen.q} />}
             {screen.s === "person" && <Person id={screen.id} />}
             {screen.s === "bday" && <Birthday />}
             {screen.s === "set" && <Settings />}
