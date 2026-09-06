@@ -101,3 +101,49 @@ export function DiffBadge({ diff }: { diff: number }) {
 export function ClickableBtn(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button {...props} onClick={(e) => { sfx.click(); props.onClick?.(e); }} />;
 }
+
+/* ---------- creator credits card ---------- */
+
+export function CreatorCard({ variant = "full" }: { variant?: "full" | "inline" }) {
+  const { t } = useStore();
+  if (variant === "inline") {
+    return (
+      <div className="flex flex-col items-center gap-1.5">
+        <p className="font-display text-[10px] tracking-[0.3em] text-gold-500/90">{t("credits")}</p>
+        <p className="text-[12px] text-ink-300">
+          {t("made_by")} <span className="text-gold-400 font-semibold">{t("creator_line")}</span>
+        </p>
+        <p className="text-[12px] text-ink-300">
+          {t("supervisor")}
+          <a href="tel:+971551544988" dir="ltr" className="text-mint-400 hover:text-mint-300 transition-colors ms-2" style={{ direction: "ltr" }}>
+            ۰۵۵۱۵۴۴۹۸۸
+          </a>
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="relative chip glass border border-gold-500/30 p-5 overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, #FFC94D, transparent)" }} />
+      <p className="font-display text-[11px] tracking-[0.32em] text-gold-500 mb-3">{t("credits")}</p>
+      <div className="space-y-2.5 text-sm">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-ink-400 font-display">{t("made_by")}</p>
+          <p className="text-gold-400 font-display text-base mt-0.5">👦 {t("creator_line")} 🇦🇪</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-ink-400 font-display">{t("supervisor_contact")}</p>
+          <p className="text-ink-200 mt-0.5">🎓 {t("supervisor")}</p>
+          <a
+            href="tel:+971551544988"
+            className="inline-flex items-center gap-2 mt-1.5 chip border border-mint-500/40 bg-mint-500/10 px-3 py-1.5 text-mint-400 hover:bg-mint-500/20 hover:border-mint-500/60 transition-all cursor-pointer"
+            style={{ direction: "ltr" }}
+          >
+            <span>📞</span>
+            <span className="font-display tracking-widest">055 154 4988</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}

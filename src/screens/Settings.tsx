@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Avatar } from "../components/Avatar";
-import { IcBack, IcCheck, IcSound } from "../components/ui";
+import { CreatorCard, IcBack, IcCheck, IcSound } from "../components/ui";
 import { LANGS } from "../i18n";
 import { TOTAL, CAT_IDS, type Person, type CatId } from "../data/people";
 import { QUESTIONS_PER_GAME } from "../lib/engine";
@@ -148,6 +148,10 @@ export default function Settings() {
       <div className="glass chip p-5 sm:p-6 mt-5 animate-rise" style={{ animationDelay: "280ms" }}>
         <h2 className={headCls}>ℹ️ {t("set_about")}</h2>
         <p className="text-ink-300 text-sm leading-relaxed mt-3">{t("set_about_d")}</p>
+
+        <div className="mt-6 max-w-md">
+          <CreatorCard />
+        </div>
         <div className="grid grid-cols-3 gap-3 mt-5">
           {[
             { v: `${TOTAL}+`, l: t("st_legends"), c: "#ffb400" },
