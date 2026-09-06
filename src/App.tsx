@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo } from "react";
 import { AmbientBG, ConfettiLayer } from "./components/fx";
-import { IcCake, IcCal, IcGear, IcGrid, IcPlay, IcSearch, IcSound, IcTrophy, IcUser, Logo, LogoMark } from "./components/ui";
+import { CreatorCard, IcCake, IcCal, IcGear, IcGrid, IcPlay, IcSearch, IcSound, IcTrophy, IcUser, Logo, LogoMark } from "./components/ui";
 import { LANGS } from "./i18n";
 import { sfx } from "./lib/audio";
 import { StoreProvider, useStore } from "./store";
@@ -172,9 +172,14 @@ function Footer() {
         </div>
       </div>
       <div className="border-t border-ink-800/80">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-2 text-[11px] text-ink-400">
-          <span className="font-display tracking-wider">© 2026 GUESS YOUR FAMOUS PEOPLE</span>
-          <span className="max-w-md text-center sm:text-end">{t("rights")}</span>
+        <div className="max-w-7xl mx-auto px-4 py-5">
+          <CreatorCard variant="inline" />
+        </div>
+        <div className="border-t border-ink-800/60">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-2 text-[11px] text-ink-400">
+            <span className="font-display tracking-wider">© 2026 GUESS YOUR FAMOUS PEOPLE</span>
+            <span className="max-w-md text-center sm:text-end">{t("rights")}</span>
+          </div>
         </div>
       </div>
     </footer>

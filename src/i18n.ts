@@ -148,6 +148,12 @@ const L: Record<string, Entry> = {
   footer_modes: ["Game Modes", "حالت‌های بازی", "أوضاع اللعب"],
   footer_links: ["Quick Links", "لینک‌های سریع", "روابط سريعة"],
   rights: ["All portraits are original AI-styled artwork. Names & birth dates are facts of the public record.", "همه پرتره‌ها آثار هنری اوریجینال به سبک هوش مصنوعی‌اند. نام‌ها و تاریخ تولدها اطلاعات عمومی‌اند.", "كل اللوحات أعمال فنية أصلية بأسلوب الذكاء الاصطناعي. الأسماء وتواريخ الميلاد حقائق عامة."],
+  // credits / creator
+  credits: ["CREDITS", "عوامل سازنده", "فريق العمل"],
+  made_by: ["Designed & built by", "طراحی و ساخت", "تصميم وبناء"],
+  creator_line: ["Karen — 13 years old, Dubai", "کارن — ۱۳ ساله، اهل دبی", "كارن — ١٣ عاماً، دبي"],
+  supervisor: ["Mentor: Dr. Aghaei", "استاد راهنما: دکتر آقایی", "المشرف: د. أغايي"],
+  supervisor_contact: ["Mentor Contact", "تماس با استاد راهنما", "التواصل مع المشرف"],
   today: ["Today", "امروز", "اليوم"],
   // eras
   era_ancient: ["Ancient (BC)", "باستان (پ.م)", "القديم (ق.م)"],
